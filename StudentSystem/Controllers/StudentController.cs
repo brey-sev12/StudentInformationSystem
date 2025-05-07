@@ -25,9 +25,14 @@ namespace StudentSystem.Controllers
         public IActionResult AddStudent(Student student)
         {
 
-            if (student.FullName == "")
+            if (student.FirstName == "")
             {
-                ModelState.AddModelError("Name", "Name cannot be empty.");
+                ModelState.AddModelError("FirstName", "Firstname cannot be empty.");
+            }
+
+            if (student.LastName == "")
+            {
+                ModelState.AddModelError("LastName", "Firstname cannot be empty.");
             }
 
             if (ModelState.IsValid)
@@ -40,7 +45,7 @@ namespace StudentSystem.Controllers
             return View(student);
         }
 
-        
+        [HttpGet]
         public IActionResult EditStudent(int id)
         {
             var student = students.FirstOrDefault(s => s.StudentID ==id);
@@ -49,7 +54,7 @@ namespace StudentSystem.Controllers
             return View(student);
         }
 
-        //POST: /Students/Edit/id
+        
         [HttpPost]
         public IActionResult EditStudent(int id, Student student) 
         { 
@@ -77,25 +82,26 @@ namespace StudentSystem.Controllers
             return View(student);
         }
 
-        // GET: /Students/Delete/id
-        public IActionResult DeleteStudent(int id) 
-        { 
+        
+        public IActionResult DeleteStudent(int id)
+        {
             var student = students.FirstOrDefault(s => s.StudentID == id);
-            if (student == null) 
+            if (student == null)
                 return NotFound();
+
             return View(student);
         }
 
-        //  POST: /Students/Delete/id
         [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirmed(int id)
+        public IActionResult Delete(int id)
         {
             var student = students.FirstOrDefault(s => s.StudentID == id);
             if (student != null)
             {
-                students.Remove(student);
+                students.Remove(student); // Remove the student from your collection
+                                          
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Index"); // Redirect to the student list page
         }
     }
 }

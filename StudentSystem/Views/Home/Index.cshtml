@@ -1,8 +1,18 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Student Registration System";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4 text-primary mb-3">Welcome to the Student Information System</h1>
+        <p class="lead">Manage student records easily — register, edit, and delete student information.</p>
+    </div>
+
+    <div class="row mt-5 justify-content-center">
+        <div class="col-md-6 text-center">
+            <a asp-controller="Student" asp-action="Index" class="btn btn-lg btn-outline-primary">
+                Go to Student List
+            </a>
+        </div>
+    </div>
 </div>

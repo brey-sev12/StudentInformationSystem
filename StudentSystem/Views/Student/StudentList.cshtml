@@ -1,0 +1,42 @@
+﻿@model List<StudentSystem.Models.Student>
+
+@{
+    ViewData["Title"] = "Student List";
+}
+
+<h2>Student List</h2>
+
+<p>
+    <a class="btn btn-success" asp-action="StudentList">Add New Student</a>
+</p>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Sex</th>
+            <th>Civil Status</th>
+            <th>Contact</th>
+            <th>Address</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var student in Model)
+    {
+        <tr>
+            <td>@student.StudentID</td>
+            <td>@($"{student.FirstName} {student.MiddleName} {student.LastName}")</td>
+            <td>@student.Sex</td>
+            <td>@student.CivilStatus</td>
+            <td>@student.Contact</td>
+            <td>@student.Address</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@student.StudentID" class="btn btn-warning btn-sm">Edit</a>
+                <a asp-action="Delete" asp-route-id="@student.StudentID" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

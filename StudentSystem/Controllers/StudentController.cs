@@ -1,107 +1,125 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using StudentSystem.Models;
+using System.Threading.Tasks;
 
 namespace StudentSystem.Controllers
 {
     public class StudentController : Controller
     {
-        private static List<Student> students = new List<Student>();
+        private readonly SISDBContext _context;
 
-        [HttpGet]
-        public IActionResult Index()
+        // Constructor: Injects the database context (SISDBContext) into the controller
+        public StudentController(SISDBContext context)
         {
-            return View(students);
+            _context = context;
         }
 
+        // GET: Student/Index - Displays a list of all students
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var students = await _context.Students.ToListAsync(); // Fetch all students from DB
+            return View(students); // Pass the list to the View
+        }
+
+        // GET: Student/AddStudent - Returns the form to add a new student
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View();
+            return View(); // Show empty form
         }
 
-        
+        // POST: Student/AddStudent - Handles the form submission for adding a student
         [HttpPost]
-        public IActionResult AddStudent(Student student)
+        public async Task<IActionResult> AddStudent(Student student)
         {
+            // Validate if fields are empty
+            if (string.IsNullOrWhiteSpace(student.FirstName))
+                ModelState.AddModelError("FirstName", "First name cannot be empty.");
 
-            if (student.FirstName == "")
+            if (string.IsNullOrWhiteSpace(student.LastName))
+                ModelState.AddModelError("LastName", "Last name cannot be empty.");
+
+            // If form data is valid
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("FirstName", "Firstname cannot be empty.");
+                _context.Students.Add(student); // Add student to DB
+                await _context.SaveChangesAsync(); // Save changes
+                return RedirectToAction("Index"); // Go back to list
             }
 
-            if (student.LastName == "")
-            {
-                ModelState.AddModelError("LastName", "Firstname cannot be empty.");
-            }
+            return View(student); // Return to form with validation errors
+        }
+
+        // GET: Student/EditStudent/5 - Show edit form for a student
+        [HttpGet]
+        public async Task<IActionResult> EditStudent(int id)
+        {
+            var student = await _context.Students.FindAsync(id); // Find student by ID
+            if (student == null)
+                return NotFound(); // Return 404 if not found
+
+            return View(student); // Show student details in form
+        }
+
+        // POST: Student/EditStudent/5 - Save updated student information
+        [HttpPost]
+        public async Task<IActionResult> EditStudent(int id, Student student)
+        {
+            if (id != student.StudentID)
+                return NotFound(); // Prevent mismatched update
 
             if (ModelState.IsValid)
             {
-                student.StudentID = students.Count + 1;
-                students.Add(student);
-                return RedirectToAction("Index");
+                try
+                {
+                    _context.Update(student); // Mark the student entity as modified
+                    await _context.SaveChangesAsync(); // Commit changes
+                    return RedirectToAction("Index");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // If student no longer exists (was deleted in the meantime)
+                    if (!StudentExists(id))
+                        return NotFound();
 
+                    throw; // Rethrow if it’s a different issue
+                }
             }
-            return View(student);
+
+            return View(student); // Return to form with validation messages
         }
 
+        // GET: Student/DeleteStudent/5 - Show confirmation for deletion
         [HttpGet]
-        public IActionResult EditStudent(int id)
+        public async Task<IActionResult> DeleteStudent(int id)
         {
-            var student = students.FirstOrDefault(s => s.StudentID ==id);
-            if (student == null)
-                return NotFound();
-            return View(student);
-        }
-
-        
-        [HttpPost]
-        public IActionResult EditStudent(int id, Student student) 
-        { 
-            if (id != student.StudentID)
-                return NotFound();
-
-            if(ModelState.IsValid)
-            {
-                var existingStudent = students.FirstOrDefault(s => s.StudentID == id);
-                if(existingStudent == null)
-                    return NotFound();
-
-                //Update student details
-                existingStudent.StudentID = student.StudentID;
-                existingStudent.FirstName = student.FirstName;
-                existingStudent.MiddleName = student.MiddleName;
-                existingStudent.LastName = student.LastName;
-                existingStudent.Sex = student.Sex;
-                existingStudent.CivilStatus = student.CivilStatus;
-                existingStudent.Contact = student.Contact;
-                existingStudent.Address = student.Address;
-
-                return RedirectToAction("Index");
-            }
-            return View(student);
-        }
-
-        
-        public IActionResult DeleteStudent(int id)
-        {
-            var student = students.FirstOrDefault(s => s.StudentID == id);
+            var student = await _context.Students.FindAsync(id); // Find student by ID
             if (student == null)
                 return NotFound();
 
-            return View(student);
+            return View(student); // Show confirmation view
         }
 
+        // POST: Student/Delete/5 - Actually delete the student from database
         [HttpPost, ActionName("Delete")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var student = students.FirstOrDefault(s => s.StudentID == id);
+            var student = await _context.Students.FindAsync(id); // Find student by ID
             if (student != null)
             {
-                students.Remove(student); // Remove the student from your collection
-                                          
+                _context.Students.Remove(student); // Remove from context
+                await _context.SaveChangesAsync(); // Commit changes
             }
-            return RedirectToAction("Index"); // Redirect to the student list page
+
+            return RedirectToAction("Index"); // Go back to student list
+        }
+
+        // Helper method: checks if a student exists in the database
+        private bool StudentExists(int id)
+        {
+            return _context.Students.Any(e => e.StudentID == id);
         }
     }
 }
